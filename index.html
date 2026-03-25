@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HAVARD SCHOOL</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:linear-gradient(135deg,#0a3d91,#1e90ff,#74b9ff);
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  color:white;
+}
+
+/* Main container */
+.container{
+  text-align:center;
+  background:rgba(255,255,255,0.1);
+  padding:40px;
+  border-radius:15px;
+  box-shadow:0 8px 25px rgba(0,0,0,0.3);
+  backdrop-filter:blur(10px);
+}
+
+/* Logo */
+.logo{
+  width:120px;
+  margin-bottom:15px;
+}
+
+/* School Name */
+h1{
+  margin:10px 0;
+  font-size:32px;
+}
+
+/* Motto */
+.motto{
+  font-style:italic;
+  margin-bottom:30px;
+  color:#dfe6e9;
+}
+
+/* Button */
+.btn{
+  background:white;
+  color:#0a3d91;
+  padding:12px 25px;
+  border:none;
+  border-radius:30px;
+  font-size:16px;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+.btn:hover{
+  background:#0a3d91;
+  color:white;
+  transform:scale(1.05);
+}
+
+/* Footer */
+.footer{
+  margin-top:20px;
+  font-size:12px;
+  color:#dfe6e9;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  
+  <!-- LOGO -->
+  <img src="havard.png" class="logo">
+
+  <!-- SCHOOL NAME -->
+  <h1>HAVARD ACADEMY SCHOOL</h1>
+
+  <!-- MOTTO -->
+  <div class="motto">Strive for Change</div>
+
+  <!-- BUTTON -->
+  <button class="btn" onclick="openReport()">📘 Examination Report</button>
+
+  <!-- FOOTER -->
+  <div class="footer">© 2026 Havard School System</div>
+
+</div>
+
+<script>
+function openReport(){
+  window.location.href="report.html";
+}
+</script>
+
+</body>
+</html>
