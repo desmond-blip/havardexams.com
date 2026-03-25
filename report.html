@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>HAVARD SCHOOL - CBC Academic Report</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <style>
 body{font-family:Arial;margin:20px;background:#f4f8ff;}
 .header{text-align:center;color:#0a3d91;}
@@ -15,15 +16,15 @@ table{width:100%;border-collapse:collapse;margin-top:10px;background:white;}
 th{background:#0a3d91;color:white;padding:8px;}
 td{border:1px solid #ccc;padding:6px;text-align:center;}
 .marks{width:60px;}
-button{background:#0a3d91;color:white;border:none;padding:6px 12px;cursor:pointer;margin:3px 0;}
+button{background:#0a3d91;color:white;border:none;padding:6px 12px;cursor:pointer;margin:3px;}
 button:hover{background:#062866;}
 .footer{margin-top:40px;display:flex;justify-content:space-between;}
 .signature{width:200px;border-top:1px solid black;text-align:center;padding-top:5px;margin-top:40px;}
-.downloadClassBtn{margin-bottom:15px;}
 </style>
 </head>
 
 <body>
+
 <div class="header">
 <img src="havard.png" class="logo"><br>
 <h2>HAVARD SCHOOL</h2>
@@ -35,6 +36,7 @@ Year: <input id="year">
 <br>
 Student Name: <input id="name">
 Admission No: <input id="adm">
+
 Class: 
 <select id="class">
 <option value="PP1">PP1</option>
@@ -49,7 +51,9 @@ Class:
 <option value="Grade8">Grade 8</option>
 <option value="Grade9">Grade 9</option>
 </select>
-<!-- Subjects -->
+
+<!-- SUBJECT TABLES -->
+
 <div class="section-title">PP1 – PP2 Subjects</div>
 <table><tbody id="pp">
 <tr><td>Language Activities</td><td><input class="marks" oninput="calculate()"></td></tr>
@@ -93,152 +97,197 @@ Class:
 <tr><td>Creative Arts & Sports</td><td><input class="marks" oninput="calculate()"></td></tr>
 <tr><td>Optional Subjects</td><td><input class="marks" oninput="calculate()"></td></tr>
 </tbody></table>
-<!-- Subject tables (PP1–PP2, Grade1-3, Grade4-6, Grade7-9) -->
-<!-- Keep all your existing tables here as in previous code -->
 
 <br>
 Total Marks: <span id="total">0</span><br>
-Level / Grade: <span id="meangrade">-</span>
+Level: <span id="meangrade">-</span>
 
 <div class="footer">
-<div class="signature">Class Teacher Signature</div>
+<div class="signature">Class Teacher</div>
 <div><strong>Fees Balance:</strong><br><input id="fees"></div>
 </div>
 
 <br><br>
-<button onclick="saveStudent()">SAVE STUDENT</button>
-<button onclick="loadAllDatabases()">LOAD ALL CLASS DATABASES</button>
+<button onclick="saveStudent()">SAVE / UPDATE STUDENT</button>
+<button onclick="loadAllDatabases()">LOAD DATABASE</button>
 
 <div class="section-title">Class Databases</div>
 <div id="classDBs"></div>
 
 <script>
-// Calculation
-function calculate() {
-  let total = 0;
-  document.querySelectorAll(".marks").forEach(i => total += parseInt(i.value)||0);
-  document.getElementById("total").innerText = total;
-  document.getElementById("meangrade").innerText = total <= 50 ? "B.E" : "";
+
+let editIndex=null;
+let editKey=null;
+
+function calculate(){
+  let total=0;
+  document.querySelectorAll(".marks").forEach(i=>total+=parseInt(i.value)||0);
+  document.getElementById("total").innerText=total;
+  document.getElementById("meangrade").innerText=total<=50?"B.E":"";
 }
 
-function gradeSystem(m){ return m<=50 ? "B.E" : ""; }
-
-// Save student
 function saveStudent(){
   const cls=document.getElementById("class").value;
   const key=cls+"_students";
-  let student={name:document.getElementById("name").value,adm:document.getElementById("adm").value,class:cls,term:document.getElementById("term").value,year:document.getElementById("year").value,fees:document.getElementById("fees").value,subjects:{},total:0,level:"",outof:0};
-  
-  const tableId = ["PP1","PP2"].includes(cls)?"pp":["Grade1","Grade2","Grade3"].includes(cls)?"g13":["Grade4","Grade5","Grade6"].includes(cls)?"g46":"g79";
+
+  let student={
+    name:document.getElementById("name").value,
+    adm:document.getElementById("adm").value,
+    class:cls,
+    term:document.getElementById("term").value,
+    year:document.getElementById("year").value,
+    fees:document.getElementById("fees").value,
+    subjects:{},total:0,outof:0,level:""
+  };
+
+  const tableId=["PP1","PP2"].includes(cls)?"pp":
+  ["Grade1","Grade2","Grade3"].includes(cls)?"g13":
+  ["Grade4","Grade5","Grade6"].includes(cls)?"g46":"g79";
+
   const inputs=document.querySelectorAll(`#${tableId} .marks`);
-  
+
   inputs.forEach(input=>{
     const sub=input.parentElement.parentElement.children[0].innerText;
     const m=parseInt(input.value)||0;
-    student.subjects[sub]={marks:m,level:gradeSystem(m)};
+    student.subjects[sub]={marks:m};
     student.total+=m;
   });
-  
+
   student.outof=inputs.length*100;
-  student.level=student.total<=50 ? "B.E" : "";
-  
+  student.level=student.total<=50?"B.E":"";
+
   let db=JSON.parse(localStorage.getItem(key))||[];
-  db.push(student);
+
+  if(editIndex!==null && editKey===key){
+    db[editIndex]=student;
+    editIndex=null; editKey=null;
+  }else{
+    db.push(student);
+  }
+
   db.sort((a,b)=>b.total-a.total);
   db.forEach((s,i)=>s.position=i+1);
+
   localStorage.setItem(key,JSON.stringify(db));
-  alert("Student saved successfully!");
+  alert("Saved Successfully");
   loadAllDatabases();
 }
 
-// Load class databases
+function editStudent(key,index){
+  const db=JSON.parse(localStorage.getItem(key))||[];
+  const s=db[index];
+
+  document.getElementById("name").value=s.name;
+  document.getElementById("adm").value=s.adm;
+  document.getElementById("class").value=s.class;
+  document.getElementById("term").value=s.term;
+  document.getElementById("year").value=s.year;
+  document.getElementById("fees").value=s.fees;
+
+  const tableId=["PP1","PP2"].includes(s.class)?"pp":
+  ["Grade1","Grade2","Grade3"].includes(s.class)?"g13":
+  ["Grade4","Grade5","Grade6"].includes(s.class)?"g46":"g79";
+
+  const inputs=document.querySelectorAll(`#${tableId} .marks`);
+  let i=0;
+  for(let sub in s.subjects){
+    inputs[i].value=s.subjects[sub].marks;
+    i++;
+  }
+
+  editIndex=index;
+  editKey=key;
+
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
 function loadAllDatabases(){
   const classes=["PP1","PP2","Grade1","Grade2","Grade3","Grade4","Grade5","Grade6","Grade7","Grade8","Grade9"];
-  const div=document.getElementById("classDBs"); div.innerHTML="";
+  const div=document.getElementById("classDBs");
+  div.innerHTML="";
+
   classes.forEach(cls=>{
     const db=JSON.parse(localStorage.getItem(cls+"_students"))||[];
-    if(!db.length){div.innerHTML+=`<h3>${cls} Empty</h3>`; return;}
+    if(!db.length){div.innerHTML+=`<h3>${cls} Empty</h3>`;return;}
+
     const subs=Object.keys(db[0].subjects);
     let html=`<h3>${cls}</h3><table><tr><th>Name</th>`;
     subs.forEach(s=>html+=`<th>${s}</th>`);
-    html+=`<th>Total</th><th>Level</th><th>Pos</th><th>PDF</th></tr>`;
+    html+=`<th>Total</th><th>Level</th><th>Pos</th><th>Actions</th></tr>`;
+
     db.forEach((s,i)=>{
       html+=`<tr><td>${s.name}</td>`;
       subs.forEach(sub=>html+=`<td>${s.subjects[sub].marks}</td>`);
-      html+=`<td>${s.total}</td><td>${s.level}</td><td>${s.position}</td>
-      <td><button onclick="downloadPDF('${cls}_students',${i})">PDF</button></td></tr>`;
+      html+=`
+      <td>${s.total}</td>
+      <td>${s.level}</td>
+      <td>${s.position}</td>
+      <td>
+      <button onclick="downloadPDF('${cls}_students',${i})">PDF</button>
+      <button onclick="editStudent('${cls}_students',${i})">UPDATE</button>
+      </td></tr>`;
     });
-    html+=`</table>`;
-    // Add full class PDF button below each class table
-    html+=`<button class="downloadClassBtn" onclick="downloadFullClassPDF('${cls}')">Download Full ${cls} PDF</button>`;
+
+    html+=`</table>
+    <button onclick="downloadFullClassPDF('${cls}')">Download ${cls} Full PDF</button>`;
+
     div.innerHTML+=html;
   });
 }
 
-// Single student PDF
 function downloadPDF(key,index){
   const db=JSON.parse(localStorage.getItem(key))||[];
-  const s=db[index]; const { jsPDF } = window.jspdf;
-  const doc=new jsPDF({format:'a4',unit:'mm'}); let y=20;
-  const img=new Image(); img.src='team_kcn.png';
+  const s=db[index];
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF();
+  let y=20;
+
+  const img=new Image();
+  img.src='team_kcn.png';
+
   img.onload=function(){
-    doc.addImage(img,'PNG',75,10,60,30);
-    doc.setFontSize(18); doc.text("HAVARD ACADEMY SCHOOL",105,50,null,null,"center");
-    doc.setFontSize(12);
+    doc.addImage(img,'PNG',70,10,60,30);
+    doc.text("HAVARD ACADEMY SCHOOL",105,50,null,null,"center");
+
     doc.text(`Name: ${s.name}`,20,65);
-    doc.text(`Adm No: ${s.adm}`,20,75);
+    doc.text(`Adm: ${s.adm}`,20,75);
     doc.text(`Class: ${s.class}`,20,85);
-    doc.text(`Term: ${s.term}`,140,65);
-    doc.text(`Year: ${s.year}`,140,75);
+
     y=95;
-    doc.setFillColor(10,61,145); doc.setTextColor(255,255,255);
-    doc.rect(15,y,180,10,'F'); doc.text("Subject",20,y+7); doc.text("Marks",110,y+7); doc.text("Level",160,y+7);
-    y+=10; doc.setTextColor(0,0,0);
     for(let sub in s.subjects){
       let d=s.subjects[sub];
-      doc.rect(15,y,180,10); doc.text(sub,20,y+7); doc.text(String(d.marks),110,y+7);
-      let lvl = d.marks<=50 ? "B.E" : "";
-      doc.text(lvl,160,y+7); y+=10;
+      doc.text(`${sub}: ${d.marks} ${d.marks<=50?"B.E":""}`,20,y);
+      y+=10;
     }
-    y+=5; doc.setFontSize(13);
-    doc.text(`Total: ${s.total} / ${s.outof}`,20,y);
-    doc.text(`Level: ${s.total<=50 ? "B.E" : s.level}`,20,y+7);
-    doc.text(`Position: ${s.position}`,20,y+14);
-    doc.text(`Fees Balance: ${s.fees}`,20,y+21);
-    doc.setFontSize(12); doc.text(s.class + " Class Teacher",140,y+35); doc.line(140,y+37,200,y+37);
-    doc.save(`${s.name}_${s.class}.pdf`);
+
+    doc.text(`Total: ${s.total}`,20,y+10);
+    doc.text(`Position: ${s.position}`,20,y+20);
+
+    doc.text(s.class+" Class Teacher",140,y+30);
+
+    doc.save(s.name+".pdf");
   }
 }
 
-// Full class PDF for given class
 function downloadFullClassPDF(cls){
-  const key=cls+"_students"; const db=JSON.parse(localStorage.getItem(key))||[];
-  if(!db.length){alert("No records for this class."); return;}
-  const {jsPDF}=window.jspdf; const doc=new jsPDF({format:'a4',unit:'mm'});
-  const subs=Object.keys(db[0].subjects); const pageHeight=297; let y=10;
-  const img=new Image(); img.src='team_kcn.png';
-  img.onload=function(){
-    db.forEach(s=>{
-      if(y>pageHeight-50){doc.addPage(); y=10;}
-      doc.addImage(img,'PNG',10,y,25,25);
-      doc.setFontSize(16); doc.text("HAVARD ACADEMY SCHOOL",70,y+10);
-      doc.setFontSize(11);
-      doc.text(`Name: ${s.name}`,10,y+35); doc.text(`Adm No: ${s.adm}`,10,y+42);
-      doc.text(`Class: ${s.class}`,10,y+49); doc.text(`Term: ${s.term}`,120,y+35); doc.text(`Year: ${s.year}`,120,y+42);
-      y+=60;
-      doc.setFillColor(10,61,145); doc.setTextColor(255,255,255);
-      doc.rect(10,y,190,8,'F'); doc.text("Subject",12,y+5); doc.text("Marks",90,y+5); doc.text("Level",140,y+5);
-      y+=8; doc.setTextColor(0,0,0);
-      subs.forEach(sub=>{let d=s.subjects[sub]; doc.rect(10,y,190,8); doc.text(sub,12,y+5); doc.text(String(d.marks),95,y+5); doc.text(d.marks<=50 ? "B.E" : "",145,y+5); y+=8;});
-      y+=5; doc.text(`Total: ${s.total} / ${s.outof}`,10,y); doc.text(`Level: ${s.total<=50 ? "B.E" : s.level}`,10,y+7);
-      doc.text(`Position: ${s.position}`,10,y+14); doc.text(`Fees Balance: ${s.fees}`,10,y+21);
-      doc.text("Class Teacher:",140,y+21); doc.line(140,y+25,200,y+25); y+=40;
-    });
-    doc.save(`${cls}_Full_Class_Report.pdf`);
-  }
+  const db=JSON.parse(localStorage.getItem(cls+"_students"))||[];
+  if(!db.length){alert("No data");return;}
+
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF();
+  let y=10;
+
+  db.forEach(s=>{
+    doc.text(`${s.name} - ${s.total} (${s.position})`,10,y);
+    y+=10;
+    if(y>280){doc.addPage();y=10;}
+  });
+
+  doc.save(cls+"_Full.pdf");
 }
 
 window.onload=loadAllDatabases;
+
 </script>
 </body>
 </html>
